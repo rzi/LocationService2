@@ -7,9 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -22,22 +20,15 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
-
-import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_LOCATION_PERMISSION = 1;
     TextView t1;
     TextView t2;
+    TextView t3;
     private LocationRequest mLocationRequest;
 
     private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
@@ -46,29 +37,18 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+    ArrayList<ExampleItem> exampleList = new ArrayList <> ();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ArrayList<ExampleItem> exampleList = new ArrayList <> ();
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line1", "Line2"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line2", "Line4"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line5", "Line6"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line1", "Line2"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line2", "Line4"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line5", "Line6"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line1", "Line2"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line2", "Line4"));
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line5", "Line6"));
         mRecyclerView= findViewById(R.id.recycleView);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         mAdapter=new ExampleAdapter(exampleList);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
-
-
 
         findViewById(R.id.buttonStartLocationUpdates).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
                         getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION
                 ) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(
-
                             MainActivity.this,
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION}
                             , REQUEST_CODE_LOCATION_PERMISSION
@@ -91,14 +70,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 stopLocationService();
-//                int serviceStop = Log.d("1","sss");
-//                startLocationService();
             }
         });
-        t1 = (TextView) findViewById(R.id.lat);
-        t2 = (TextView) findViewById(R.id.lon);
-        startLocationUpdates();
-
+        //startLocationUpdates();
     }
 
     @Override
@@ -127,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             return false;
-
         }
         return false;
     }
@@ -151,56 +124,56 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Trigger new location updates at interval
-    protected void startLocationUpdates() {
+//    // Trigger new location updates at interval
+//    protected void startLocationUpdates() {
+//
+//        // Create the location request to start receiving updates
+//        mLocationRequest = new LocationRequest();
+//        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        mLocationRequest.setInterval(UPDATE_INTERVAL);
+//        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+//
+//        // Create LocationSettingsRequest object using location request
+//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+//        builder.addLocationRequest(mLocationRequest);
+//        LocationSettingsRequest locationSettingsRequest = builder.build();
+//
+//        // Check whether location settings are satisfied
+//        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
+//        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+//        settingsClient.checkLocationSettings(locationSettingsRequest);
+//
+//        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return;
+//        }
+//        getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, new LocationCallback() {
+//                    @Override
+//                    public void onLocationResult(LocationResult locationResult) {
+//                        // do work here
+//                        onLocationChanged(locationResult.getLastLocation());
+//                    }
+//                },
+//                Looper.myLooper());
+//    }
+//    public void onLocationChanged(Location location) {
+//        // New location has now been determined
+//        String msg = "Updated Location: " +
+//                Double.toString(location.getLatitude()) + "," +
+//                Double.toString(location.getLongitude());
+//        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+//        // You can now create a LatLng Object for use with maps
+//        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+//    }
 
-        // Create the location request to start receiving updates
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-
-        // Create LocationSettingsRequest object using location request
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        LocationSettingsRequest locationSettingsRequest = builder.build();
-
-        // Check whether location settings are satisfied
-        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
-        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
-        settingsClient.checkLocationSettings(locationSettingsRequest);
-
-        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, new LocationCallback() {
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        // do work here
-                        onLocationChanged(locationResult.getLastLocation());
-                    }
-                },
-                Looper.myLooper());
-    }
-    public void onLocationChanged(Location location) {
-        // New location has now been determined
-        String msg = "Updated Location: " +
-                Double.toString(location.getLatitude()) + "," +
-                Double.toString(location.getLongitude());
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        // You can now create a LatLng Object for use with maps
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-    }
-
-    final String mBroadcastStringAction = "net.myenv.broadcast.mStartCounting";
+    final String mBroadcastStringAction = "BroadcastID1";
 
     private IntentFilter filter = new IntentFilter(mBroadcastStringAction);
 
@@ -216,14 +189,10 @@ public class MainActivity extends AppCompatActivity {
                 double lon = arg1.getExtras().getDouble("lon");
                 double lat = arg1.getExtras().getDouble("lat");
                 Log.d("TAG", "Activity: "+lat +" "+ lon  );
-                t1.setText(Double.toString(lat));
-                t2.setText(Double.toString(lon));
-               // setData(lat,lon);
+                setData(lat,lon);
             }
         }
     };
-
-
 
     @Override
     public void onResume() {
@@ -237,15 +206,20 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-private void setData(double lat, double lon){
+   public void setData(double lat, double lon){
         setContentView(R.layout.activity_main);
-        ArrayList<ExampleItem> exampleList = new ArrayList <> ();
-        exampleList.add(new ExampleItem(R.drawable.ic_android, "Line9", "Line10"));
+        exampleList.add(0, new ExampleItem(R.drawable.ic_android,"Latitude: "+ Double.toString(lat), "Longitude: "+ Double.toString(lon)));
         mRecyclerView= findViewById(R.id.recycleView);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         mAdapter=new ExampleAdapter(exampleList);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
+       t1 = (TextView) findViewById(R.id.lat);
+       t2 = (TextView) findViewById(R.id.lon);
+       t3 = (TextView) findViewById(R.id.nbSavedPositions);
+       t1.setText(Double.toString(lat));
+       t2.setText(Double.toString(lon));
+       t3.setText("" + exampleList.size());
     }
 }
