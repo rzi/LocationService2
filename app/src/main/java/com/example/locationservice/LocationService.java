@@ -1,3 +1,4 @@
+
 package com.example.locationservice;
 
 import android.Manifest;
@@ -32,13 +33,7 @@ public class LocationService extends Service {
                 double latitude = locationResult.getLastLocation().getLatitude();
                 double longitude = locationResult.getLastLocation().getLongitude();
                 Log.d("Location_Update", latitude + "," + longitude);
-//                lat.setText("After Clicking"); //set the text after clicking button
-//                t1.setText ("aaaaa");
-                final String mBroadcastStringAction = "net.myenv.broadcast.mStartCounting";
-//                Intent broadcastIntent = new Intent(getApplicationContext(),MainActivity.class);
-//                broadcastIntent.setAction(mBroadcastStringAction);
-//                broadcastIntent.putExtra("startCounting", false);
-//                sendBroadcast(broadcastIntent);
+                final String mBroadcastStringAction = "BroadcastID1";
                 Intent intent = new Intent();
                 intent.setAction(mBroadcastStringAction);
                 intent.putExtra("lat", latitude);
