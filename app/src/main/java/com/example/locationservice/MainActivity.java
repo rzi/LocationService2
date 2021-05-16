@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
         mAdapter=new ExampleAdapter(exampleList);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
-
         findViewById(R.id.buttonStartLocationUpdates).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,9 +69,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 stopLocationService();
+                Log.d ("TAG", "klik stop");
             }
         });
-        //startLocationUpdates();
     }
 
     @Override
@@ -87,16 +86,16 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-
-    private boolean isLocationServiceRunning() {
-        ActivityManager activityManager =
-                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+    public boolean isLocationServiceRunning() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        Log.d("TAG","isRunning: " + activityManager);
         if (activityManager != null) {
             for (ActivityManager.RunningServiceInfo service :
                     activityManager.getRunningServices(Integer.MAX_VALUE)) {
-                if (LocationService.class.getName().equals(service.service.getClassName())) {
+                Log.d("TAG" , "activityManager: "+ activityManager.getRunningServices(Integer.MAX_VALUE));
+                Log.d("TAG", "if location service " + LocationService.class.getName().equals(service.service.getClassName()));                if (LocationService.class.getName().equals(service.service.getClassName())) {
                     if (service.foreground) {
-                        return true;
+                        Log.d ("TAG" , "service foreground: " + service.foreground);return true;
                     }
                 }
             }
@@ -104,8 +103,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
-    private void startLocationService() {
+    public void startLocationService() {
         if (!isLocationServiceRunning()) {
             Intent intent = new Intent(getApplicationContext(), LocationService.class);
             intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
@@ -113,87 +111,38 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Location service started ", Toast.LENGTH_SHORT).show();
         }
     }
-
-    private void stopLocationService() {
+    public void stopLocationService() {
+        Log.d("TAG", "stop");
         Toast.makeText(this, "jestem w stop " +isLocationServiceRunning() , Toast.LENGTH_SHORT).show();
-        if (isLocationServiceRunning()) {
+//        if (isLocationServiceRunning()) {
             Intent intent = new Intent(getApplicationContext(), LocationService.class);
             intent.setAction(Constants.ACTION_STOP_LOCATION_SERVICE);
-            stopService(intent);
+            startService(intent);
             Toast.makeText(this, "Location service stopped", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-//    // Trigger new location updates at interval
-//    protected void startLocationUpdates() {
-//
-//        // Create the location request to start receiving updates
-//        mLocationRequest = new LocationRequest();
-//        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        mLocationRequest.setInterval(UPDATE_INTERVAL);
-//        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-//
-//        // Create LocationSettingsRequest object using location request
-//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-//        builder.addLocationRequest(mLocationRequest);
-//        LocationSettingsRequest locationSettingsRequest = builder.build();
-//
-//        // Check whether location settings are satisfied
-//        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
-//        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
-//        settingsClient.checkLocationSettings(locationSettingsRequest);
-//
-//        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return;
 //        }
-//        getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, new LocationCallback() {
-//                    @Override
-//                    public void onLocationResult(LocationResult locationResult) {
-//                        // do work here
-//                        onLocationChanged(locationResult.getLastLocation());
-//                    }
-//                },
-//                Looper.myLooper());
-//    }
-//    public void onLocationChanged(Location location) {
-//        // New location has now been determined
-//        String msg = "Updated Location: " +
-//                Double.toString(location.getLatitude()) + "," +
-//                Double.toString(location.getLongitude());
-//        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-//        // You can now create a LatLng Object for use with maps
-//        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-//    }
 
+    }
     final String mBroadcastStringAction = "BroadcastID1";
-
-    private IntentFilter filter = new IntentFilter(mBroadcastStringAction);
-
-    private BroadcastReceiver broadcast = new BroadcastReceiver(){
+    public IntentFilter filter = new IntentFilter(mBroadcastStringAction);
+    public BroadcastReceiver broadcast = new BroadcastReceiver(){
         @Override
         public void onReceive(Context arg0, Intent arg1) {
             Toast.makeText(arg0, "Masz nowe dane z GPS", Toast.LENGTH_SHORT).show();
-            Log.d("Reciever", "msg " +arg1 + " "
+            Log.d("TAG", "msg " +arg1 + " "
                     +arg1.getExtras().getDouble("lon") +" "
                     +arg1.getExtras().getDouble("lat")
             );
             if (arg1.getExtras() != null) {
                 double lon = arg1.getExtras().getDouble("lon");
                 double lat = arg1.getExtras().getDouble("lat");
-                Log.d("TAG", "Activity: "+lat +" "+ lon  );
+                Log.d("TAG", "MainActivity: "+lat +" "+ lon  );
                 setData(lat,lon);
             }
-        }
-    };
 
+        }
+
+
+    };
     @Override
     public void onResume() {
         super.onResume();
@@ -205,16 +154,16 @@ public class MainActivity extends AppCompatActivity {
         // pamiętaj żeby wyrejestrować receivera !
         super.onPause();
     }
-
    public void setData(double lat, double lon){
-        setContentView(R.layout.activity_main);
+        //setContentView(R.layout.activity_main);
         exampleList.add(0, new ExampleItem(R.drawable.ic_android,"Latitude: "+ Double.toString(lat), "Longitude: "+ Double.toString(lon)));
-        mRecyclerView= findViewById(R.id.recycleView);
-        mRecyclerView.setHasFixedSize(true);
-        mLayoutManager = new LinearLayoutManager(this);
-        mAdapter=new ExampleAdapter(exampleList);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.setAdapter(mAdapter);
+       // mRecyclerView= findViewById(R.id.recycleView);
+        //mRecyclerView.setHasFixedSize(true);
+        //mLayoutManager = new LinearLayoutManager(this);
+        //mAdapter=new ExampleAdapter(exampleList);
+        //mRecyclerView.setLayoutManager(mLayoutManager);
+        //mRecyclerView.setAdapter(mAdapter);
+       mAdapter.notifyDataSetChanged();
        t1 = (TextView) findViewById(R.id.lat);
        t2 = (TextView) findViewById(R.id.lon);
        t3 = (TextView) findViewById(R.id.nbSavedPositions);

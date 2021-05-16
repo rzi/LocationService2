@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -32,13 +33,14 @@ public class LocationService extends Service {
             if (locationResult != null && locationResult.getLastLocation() != null) {
                 double latitude = locationResult.getLastLocation().getLatitude();
                 double longitude = locationResult.getLastLocation().getLongitude();
-                Log.d("Location_Update", latitude + "," + longitude);
                 final String mBroadcastStringAction = "BroadcastID1";
                 Intent intent = new Intent();
                 intent.setAction(mBroadcastStringAction);
                 intent.putExtra("lat", latitude);
                 intent.putExtra("lon", longitude);
                 sendBroadcast(intent);
+
+                Log.d("TAG",  "Foreground location: " + latitude + "," + longitude);
             }
         }
     };
@@ -83,7 +85,7 @@ public class LocationService extends Service {
             }
         }
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(4000);
+        locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(2000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
@@ -100,25 +102,29 @@ public class LocationService extends Service {
         LocationServices.getFusedLocationProviderClient(this)
                 .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
+        Log.d("TAG", "OK Location foreground started");
     }
-    private void stopLocationService(){
+    public void stopLocationService(){
         LocationServices.getFusedLocationProviderClient(this)
                 .removeLocationUpdates(locationCallback);
         stopForeground(true);
         stopSelf();
+        Log.d("TAG", "jestem w stop");
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null){
+        if (intent != null) {
             String action = intent.getAction();
-            if (action != null){
-                if (action.equals(Constants.ACTION_START_LOCATION_SERVICE)){
+            Log.d("TAG", "jestem w onStart : " + action);
+            if (action != null) {
+                if (action.equals(Constants.ACTION_START_LOCATION_SERVICE)) {
                     startLocationService();
-                } else if ( action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)){
+                } else if (action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)) {
                     stopLocationService();
                 }
             }
         }
-        return super.onStartCommand(intent, flags, startId);
+//        return super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;
     }
 }
