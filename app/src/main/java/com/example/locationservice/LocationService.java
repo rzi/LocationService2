@@ -165,8 +165,6 @@ double latitude, longitude, speed;
                 this.error = error;
                 error.printStackTrace(); //log the error resulting from the request for diagnosis/debugging
             }
-
-
         })
                 //This is for Headers If You Needed
         {
@@ -176,7 +174,6 @@ double latitude, longitude, speed;
                 params.put("Content-Type", "application/json; charset=UTF-8");
                 return params;
             }
-
         };
         // Add the request to the RequestQueue.
         RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
