@@ -1,4 +1,3 @@
-
 package com.example.locationservice;
 
 import android.Manifest;
@@ -10,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -19,32 +17,45 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 public class LocationService extends Service {
+public String idName;
+public String idIndex;
+double latitude, longitude, speed;
 
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             super.onLocationResult(locationResult);
             if (locationResult != null && locationResult.getLastLocation() != null) {
-                double latitude = locationResult.getLastLocation().getLatitude();
-                double longitude = locationResult.getLastLocation().getLongitude();
-                final String mBroadcastStringAction = "BroadcastID1";
-                Intent intent = new Intent();
-                intent.setAction(mBroadcastStringAction);
-                intent.putExtra("lat", latitude);
-                intent.putExtra("lon", longitude);
-                sendBroadcast(intent);
-
-                Log.d("TAG",  "Foreground location: " + latitude + "," + longitude);
+                latitude = locationResult.getLastLocation().getLatitude();
+                longitude = locationResult.getLastLocation().getLongitude();
+                speed = locationResult.getLastLocation().getSpeed();
+                Log.d("TAG",  "Foreground location: " + latitude + ", " + longitude + ", "+ speed);
+                try {
+                    saveUserLocation(latitude, longitude, speed,  idIndex, idName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     };
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -59,7 +70,6 @@ public class LocationService extends Service {
                 0,
                 new Intent[]{resultIntent},
                 PendingIntent.FLAG_UPDATE_CURRENT);
-
          NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 getApplicationContext(),
                 channelId
@@ -71,7 +81,6 @@ public class LocationService extends Service {
         builder.setContentIntent(pendingIntent);
         builder.setAutoCancel(false);
         builder.setPriority(NotificationCompat.PRIORITY_MAX);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager != null
                     && notificationManager.getNotificationChannel(channelId) == null) {
@@ -85,10 +94,9 @@ public class LocationService extends Service {
             }
         }
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
+        locationRequest.setInterval(60000);
         locationRequest.setFastestInterval(2000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -118,13 +126,70 @@ public class LocationService extends Service {
             Log.d("TAG", "jestem w onStart : " + action);
             if (action != null) {
                 if (action.equals(Constants.ACTION_START_LOCATION_SERVICE)) {
+                    idName = (String) intent.getExtras().get("idName");
+                    idIndex = (String) intent.getExtras().get("idIndex");
                     startLocationService();
                 } else if (action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)) {
                     stopLocationService();
                 }
             }
         }
-//        return super.onStartCommand(intent, flags, startId);
         return START_NOT_STICKY;
+    }
+    private void saveUserLocation(double latitude, double longitude , double speed ,String idIndex, String idName) throws IOException {
+        Log.d("TAG",  "save: " + latitude + ", " + longitude + ", "+ speed);
+        Long time = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+        postHttpResponse(time, Double.toString(latitude), Double.toString(longitude), Double.toString(speed), idName, idIndex);
+        BroadcastToFront (time, latitude, longitude);
+    }
+    public void postHttpResponse (Long time, String lat, String longitude, String s , String idName, String idIndex)  {
+        String requestUrl = "https://busmapa.ct8.pl/saveToDB.php?time="+ time +
+                "&lat="+ lat +
+                "&longitude=" + longitude +
+                "&s=" +s +
+                "&idName=" + idName +
+                "&idIndex=" + idIndex
+                ;
+        Log.d("TAG","http request " + requestUrl);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, requestUrl, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d("RESPONSE", String.valueOf(response));
+            }
+        }, new Response.ErrorListener() {
+            private VolleyError error;
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                this.error = error;
+                error.printStackTrace(); //log the error resulting from the request for diagnosis/debugging
+            }
+
+
+        })
+                //This is for Headers If You Needed
+        {
+            @Override
+            public Map<String, String> getHeaders () throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Content-Type", "application/json; charset=UTF-8");
+                return params;
+            }
+
+        };
+        // Add the request to the RequestQueue.
+        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+        requestQueue.add(stringRequest);
+    };
+    private void BroadcastToFront(Long time,  double latitude, double longitude) {
+        final String mBroadcastStringAction = "BroadcastID1";
+        Log.d("TAG",  "brodcast: " + latitude + ", " + longitude + ", "+ time);
+        Intent intent = new Intent();
+        intent.setAction(mBroadcastStringAction);
+        intent.putExtra("lat", latitude);
+        intent.putExtra("lon", longitude);
+        intent.putExtra("time", time);
+        sendBroadcast(intent);
     }
 }

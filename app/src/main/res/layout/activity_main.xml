@@ -11,7 +11,37 @@
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".MainActivity">
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wprowadź Linie:"
+        android:textAlignment="center"
+        android:textSize="18sp" />
 
+    <EditText
+        android:id="@+id/editTextIdName"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text=""
+        android:textAlignment="center"/>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Wprowadź numer:"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        />
+    <EditText
+        android:id="@+id/editTextIdIndex"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text=""
+        android:textAlignment="center"/>
     <Button
         android:id="@+id/buttonStartLocationUpdates"
         android:layout_width="wrap_content"
@@ -28,6 +58,12 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?android:attr/listDivider" />
+
+    <Switch
+        android:id="@+id/switch2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Switch" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -68,18 +104,25 @@
         android:layout_height="wrap_content"
         android:id="@+id/nbSavedPositions"
         android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/buttonClear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear" />
+
     <View
         android:id="@+id/divider4"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?android:attr/listDivider" />
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/name"
-        android:textSize="20sp"
-        android:padding="20dp"
-        />
+<!--    <TextView-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:id="@+id/name"-->
+<!--        android:textSize="20sp"-->
+<!--        android:padding="20dp"-->
+<!--        />-->
 
 
  <androidx.recyclerview.widget.RecyclerView

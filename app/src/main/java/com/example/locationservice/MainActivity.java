@@ -1,5 +1,4 @@
 package com.example.locationservice;
-
 import android.Manifest;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
@@ -10,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,7 +22,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.LocationRequest;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_LOCATION_PERMISSION = 1;
@@ -30,15 +35,14 @@ public class MainActivity extends AppCompatActivity {
     TextView t2;
     TextView t3;
     private LocationRequest mLocationRequest;
-
     private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
     private long FASTEST_INTERVAL = 2000; /* 2 sec */
-
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     ArrayList<ExampleItem> exampleList = new ArrayList <> ();
-
+    public EditText mEdit;
+    public EditText mEdit2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
         mAdapter=new ExampleAdapter(exampleList);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
+        mEdit = (EditText)findViewById(R.id.editTextIdName);
+        mEdit2 = (EditText)findViewById(R.id.editTextIdIndex);
         findViewById(R.id.buttonStartLocationUpdates).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,6 +78,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d ("TAG", "klik stop");
             }
         });
+        findViewById(R.id.buttonClear).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                exampleList.clear();
+                mAdapter.notifyDataSetChanged();
+                t3.setText("" + exampleList.size());
+            }
+        });
     }
 
     @Override
@@ -83,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Permission denied! ", Toast.LENGTH_SHORT).show();
             }
-
         }
     }
     public boolean isLocationServiceRunning() {
@@ -107,7 +120,24 @@ public class MainActivity extends AppCompatActivity {
         if (!isLocationServiceRunning()) {
             Intent intent = new Intent(getApplicationContext(), LocationService.class);
             intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
-            startService(intent);
+
+            Log.d("TAG","android.os.Build.VERSION.SDK_INT: " + android.os.Build.VERSION.SDK_INT);
+            Log.d("TAG","android.os.Build.VERSION_CODES.O: " + android.os.Build.VERSION_CODES.O);
+
+            String idName=this.mEdit.getText().toString();
+            String idIndex=this.mEdit2.getText().toString();
+            Log.d("TAG" , "IdIndex  = " + idIndex + " InName = " + idName);
+            if ( idIndex == ""){
+                return;
+            }
+            intent.putExtra("idName",idName);
+            intent.putExtra("idIndex",idIndex);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+                Log.d("TAG","Statr Foregroubnd servicve: ");
+                MainActivity.this.startForegroundService(intent);
+            }else{
+                startService(intent);
+            }
             Toast.makeText(this, "Location service started ", Toast.LENGTH_SHORT).show();
         }
     }
@@ -130,19 +160,39 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(arg0, "Masz nowe dane z GPS", Toast.LENGTH_SHORT).show();
             Log.d("TAG", "msg " +arg1 + " "
                     +arg1.getExtras().getDouble("lon") +" "
-                    +arg1.getExtras().getDouble("lat")
+                    +arg1.getExtras().getDouble("lat" + " "
+                    + arg1.getExtras().getInt("time"))
             );
             if (arg1.getExtras() != null) {
                 double lon = arg1.getExtras().getDouble("lon");
                 double lat = arg1.getExtras().getDouble("lat");
-                Log.d("TAG", "MainActivity: "+lat +" "+ lon  );
-                setData(lat,lon);
+                Long time = arg1.getExtras().getLong("time");
+                Log.d("TAG", "MainActivity: "+lat +" "+ lon  +" " + time);
+                Long ts = arg1.getExtras().getLong("time")*1000;
+                Date mytime = getDate(ts);
+                String mytime1 = mytime.toString();
+                setData(mytime1, lat,lon);
             }
-
         }
 
 
     };
+    private Date getDate(long time) {
+        Calendar cal = Calendar.getInstance();
+        TimeZone tz;//get your local time zone.
+        tz = cal.getTimeZone();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm a");
+        sdf.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));//set time zone.
+        String localTime = sdf.format( new Date(time));
+        Date date;
+        date = new Date();
+        try {
+            date = sdf.parse(localTime);//get local date
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date;
+    }
     @Override
     public void onResume() {
         super.onResume();
@@ -154,15 +204,8 @@ public class MainActivity extends AppCompatActivity {
         // pamiętaj żeby wyrejestrować receivera !
         super.onPause();
     }
-   public void setData(double lat, double lon){
-        //setContentView(R.layout.activity_main);
-        exampleList.add(0, new ExampleItem(R.drawable.ic_android,"Latitude: "+ Double.toString(lat), "Longitude: "+ Double.toString(lon)));
-       // mRecyclerView= findViewById(R.id.recycleView);
-        //mRecyclerView.setHasFixedSize(true);
-        //mLayoutManager = new LinearLayoutManager(this);
-        //mAdapter=new ExampleAdapter(exampleList);
-        //mRecyclerView.setLayoutManager(mLayoutManager);
-        //mRecyclerView.setAdapter(mAdapter);
+    public void setData(String mytime, double lat, double lon){
+       exampleList.add(0, new ExampleItem("Date/Time:  "+ mytime, "Latitude: "+ Double.toString(lat), "Longitude: "+ Double.toString(lon)));
        mAdapter.notifyDataSetChanged();
        t1 = (TextView) findViewById(R.id.lat);
        t2 = (TextView) findViewById(R.id.lon);
